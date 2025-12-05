@@ -1,19 +1,21 @@
 //! API endpoints for BridgeX backend
 
 use axum::{
-    extract::Json,
+    extract::{Path, State},
     http::StatusCode,
     response::{IntoResponse, Response},
+    Json,
 };
 use serde_json::json;
 use uuid::Uuid;
 
 use super::{PairRequest, PairResponse, TransferRequest, TransferResponse};
 use crate::crypto::keys::generate_keypair;
+use crate::db::models::{Device, Transfer};
+use crate::qr::generate_pairing_qr;
+use crate::AppState;
 
 /// Health check endpoint
-///
-/// Returns server status and uptime information
 pub async fn health() -> impl IntoResponse {
     Json(json!({
         "status": "ok",
@@ -24,39 +26,46 @@ pub async fn health() -> impl IntoResponse {
 }
 
 /// Device pairing endpoint
-///
-/// Generates a keypair and QR code for device pairing
-pub async fn pair(Json(payload): Json<PairRequest>) -> Result<Json<PairResponse>, AppError> {
+pub async fn pair(
+    State(state): State<AppState>,
+    Json(payload): Json<PairRequest>,
+) -> Result<Json<PairResponse>, AppError> {
     tracing::info!("Pairing request from device: {}", payload.device_name);
 
-    // Generate keypair for this pairing session
     let keypair = generate_keypair();
     let device_id = Uuid::new_v4().to_string();
 
-    // Create QR code data (base64 encoded public key + device ID)
-    let qr_data = format!(
-        "bridgex://pair?id={}&key={}",
-        device_id,
-        base64::encode(&keypair.public_key)
-    );
+    // Generate QR code with pairing information
+    let (qr_data_url, pairing_uri) = generate_pairing_qr(&device_id, &keypair.public_key)
+        .map_err(|e| anyhow::anyhow!("QR generation failed: {}", e))?;
 
-    // Set expiration time (5 minutes from now)
+    // Save device to database
+    let device = Device::new(
+        device_id.clone(),
+        payload.device_name,
+        "desktop".to_string(),
+        keypair.public_key.to_vec(),
+    );
+    
+    state.db.save_device(&device).await
+        .map_err(|e| anyhow::anyhow!("Database error: {}", e))?;
+
     let expires_at = chrono::Utc::now() + chrono::Duration::minutes(5);
 
     tracing::info!("Generated pairing for device_id: {}", device_id);
+    tracing::debug!("Pairing URI: {}", pairing_uri);
 
     Ok(Json(PairResponse {
         device_id,
         public_key: base64::encode(&keypair.public_key),
-        qr_data,
+        qr_data: qr_data_url,
         expires_at,
     }))
 }
 
 /// Initialize file transfer
-///
-/// Creates a transfer session and returns upload URL
 pub async fn transfer_init(
+    State(state): State<AppState>,
     Json(payload): Json<TransferRequest>,
 ) -> Result<Json<TransferResponse>, AppError> {
     tracing::info!(
@@ -66,8 +75,28 @@ pub async fn transfer_init(
         payload.device_id
     );
 
+    // Verify device exists
+    let device = state.db.get_device(&payload.device_id).await
+        .map_err(|e| anyhow::anyhow!("Database error: {}", e))?;
+    
+    if device.is_none() {
+        return Err(AppError(anyhow::anyhow!("Device not found")));
+    }
+
     let transfer_id = Uuid::new_v4().to_string();
     let upload_url = format!("/api/v1/transfer/{}/upload", transfer_id);
+
+    // Save transfer to database
+    let transfer = Transfer::new(
+        transfer_id.clone(),
+        payload.device_id,
+        payload.file_name,
+        payload.file_size as i64,
+        payload.file_hash,
+    );
+    
+    state.db.save_transfer(&transfer).await
+        .map_err(|e| anyhow::anyhow!("Database error: {}", e))?;
 
     Ok(Json(TransferResponse {
         transfer_id,
@@ -77,15 +106,37 @@ pub async fn transfer_init(
 }
 
 /// Server status endpoint
-///
-/// Returns detailed server status
-pub async fn status() -> impl IntoResponse {
-    Json(json!({
+pub async fn status(State(state): State<AppState>) -> Result<impl IntoResponse, AppError> {
+    let devices = state.db.get_devices().await
+        .map_err(|e| anyhow::anyhow!("Database error: {}", e))?;
+    
+    Ok(Json(json!({
         "uptime": "running",
         "active_connections": 0,
         "pending_transfers": 0,
-        "paired_devices": 0,
-    }))
+        "paired_devices": devices.len(),
+    })))
+}
+
+/// List all paired devices
+pub async fn list_devices(State(state): State<AppState>) -> Result<impl IntoResponse, AppError> {
+    let devices = state.db.get_devices().await
+        .map_err(|e| anyhow::anyhow!("Database error: {}", e))?;
+    
+    Ok(Json(devices))
+}
+
+/// Delete a device
+pub async fn delete_device(
+    State(state): State<AppState>,
+    Path(device_id): Path<String>,
+) -> Result<impl IntoResponse, AppError> {
+    tracing::info!("Deleting device: {}", device_id);
+    
+    state.db.delete_device(&device_id).await
+        .map_err(|e| anyhow::anyhow!("Database error: {}", e))?;
+    
+    Ok(StatusCode::NO_CONTENT)
 }
 
 /// Application error type
