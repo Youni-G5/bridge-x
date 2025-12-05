@@ -1,0 +1,83 @@
+# Rust
+target/
+**/*.rs.bk
+*.pdb
+Cargo.lock
+
+# Flutter/Dart
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+build/
+*.g.dart
+*.freezed.dart
+
+# Tauri
+desktop/src-tauri/target/
+desktop/src-tauri/WixTools/
+desktop/src-tauri/*.log
+
+# IDEs
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Environment & Secrets
+.env
+.env.local
+.env.*.local
+secrets/
+*.key
+*.pem
+*.p12
+*.jks
+keystore.properties
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+data/
+
+# Logs
+*.log
+logs/
+
+# Node modules (if using)
+node_modules/
+package-lock.json
+yarn.lock
+
+# OS
+Thumbs.db
+ehthumbs.db
+
+# Build artifacts
+dist/
+release/
+*.apk
+*.ipa
+*.exe
+*.dmg
+*.deb
+*.rpm
+*.msi
+*.AppImage
+
+# Test coverage
+coverage/
+*.profraw
+*.profdata
+
+# Temporary
+tmp/
+temp/
+*.tmp
+*.bak
+*.backup
