@@ -1,0 +1,290 @@
+openapi: 3.0.3
+info:
+  title: BridgeX API
+  description: |
+    BridgeX backend REST API for P2P file transfer and device management.
+    
+    All endpoints are local-only by default (http://127.0.0.1:8080).
+  version: 0.1.0
+  contact:
+    name: BridgeX Team
+    url: https://github.com/Youni-G5/bridge-x
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://127.0.0.1:8080/api/v1
+    description: Local development server
+  - url: http://192.168.1.100:8080/api/v1
+    description: LAN server (adjust IP)
+
+tags:
+  - name: health
+    description: Health and status endpoints
+  - name: pairing
+    description: Device pairing operations
+  - name: transfer
+    description: File transfer operations
+  - name: devices
+    description: Device management
+
+paths:
+  /health:
+    get:
+      summary: Health check
+      description: Returns server status and version information
+      tags:
+        - health
+      responses:
+        '200':
+          description: Server is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+                  service:
+                    type: string
+                    example: BridgeX Backend
+                  version:
+                    type: string
+                    example: 0.1.0
+                  timestamp:
+                    type: string
+                    format: date-time
+
+  /status:
+    get:
+      summary: Server status
+      description: Returns detailed server status including connections and transfers
+      tags:
+        - health
+      responses:
+        '200':
+          description: Server status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  uptime:
+                    type: string
+                    example: running
+                  active_connections:
+                    type: integer
+                    example: 2
+                  pending_transfers:
+                    type: integer
+                    example: 1
+                  paired_devices:
+                    type: integer
+                    example: 3
+
+  /pair:
+    post:
+      summary: Request device pairing
+      description: |
+        Generates a new keypair and QR code for device pairing.
+        The QR code contains the device ID and public key.
+      tags:
+        - pairing
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - device_name
+              properties:
+                device_name:
+                  type: string
+                  example: My Phone
+                  description: Human-readable device name
+      responses:
+        '200':
+          description: Pairing information generated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PairResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /transfer:
+    post:
+      summary: Initialize file transfer
+      description: |
+        Creates a transfer session for uploading a file to a paired device.
+      tags:
+        - transfer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransferRequest'
+      responses:
+        '200':
+          description: Transfer session created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransferResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Device not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /devices:
+    get:
+      summary: List paired devices
+      description: Returns all paired devices
+      tags:
+        - devices
+      responses:
+        '200':
+          description: List of devices
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Device'
+
+  /devices/{device_id}:
+    delete:
+      summary: Unpair device
+      description: Removes a paired device and invalidates its session
+      tags:
+        - devices
+      parameters:
+        - name: device_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Device ID to unpair
+      responses:
+        '204':
+          description: Device unpaired successfully
+        '404':
+          description: Device not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  schemas:
+    Device:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 123e4567-e89b-12d3-a456-426614174000
+        name:
+          type: string
+          example: My Phone
+        type:
+          type: string
+          enum: [desktop, mobile, tablet]
+          example: mobile
+        public_key:
+          type: string
+          format: base64
+          description: X25519 public key (base64 encoded)
+        paired_at:
+          type: string
+          format: date-time
+        last_seen:
+          type: string
+          format: date-time
+          nullable: true
+
+    PairResponse:
+      type: object
+      properties:
+        device_id:
+          type: string
+          format: uuid
+          example: 123e4567-e89b-12d3-a456-426614174000
+        public_key:
+          type: string
+          format: base64
+          description: Server's X25519 public key
+        qr_data:
+          type: string
+          example: bridgex://pair?id=123e4567&key=base64key
+          description: QR code data URI
+        expires_at:
+          type: string
+          format: date-time
+          description: Pairing request expiration
+
+    TransferRequest:
+      type: object
+      required:
+        - device_id
+        - file_name
+        - file_size
+        - file_hash
+      properties:
+        device_id:
+          type: string
+          format: uuid
+          example: 123e4567-e89b-12d3-a456-426614174000
+        file_name:
+          type: string
+          example: document.pdf
+        file_size:
+          type: integer
+          format: int64
+          example: 1048576
+          description: File size in bytes
+        file_hash:
+          type: string
+          example: sha256:abc123...
+          description: SHA-256 hash of file content
+
+    TransferResponse:
+      type: object
+      properties:
+        transfer_id:
+          type: string
+          format: uuid
+          example: 987e6543-e21b-12d3-a456-426614174999
+        status:
+          type: string
+          enum: [pending, uploading, completed, failed]
+          example: pending
+        upload_url:
+          type: string
+          example: /api/v1/transfer/987e6543/upload
+          description: URL to upload file chunks
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Device not found
+          description: Human-readable error message
