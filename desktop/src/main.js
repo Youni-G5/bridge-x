@@ -12,11 +12,17 @@ const qrModal = document.getElementById('qr-modal');
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
-    checkHealth();
-    loadDevices();
+    // Wait a bit for backend to start
+    setTimeout(() => {
+        checkHealth();
+        loadDevices();
+    }, 2000);
 
     // Event listeners
-    refreshBtn.addEventListener('click', checkHealth);
+    refreshBtn.addEventListener('click', () => {
+        checkHealth();
+        loadDevices();
+    });
     pairBtn.addEventListener('click', handlePairDevice);
     sendFileBtn.addEventListener('click', handleSendFile);
 });
@@ -28,20 +34,28 @@ async function checkHealth() {
         statusElement.className = 'status-indicator';
 
         const result = await invoke('check_health');
+        const data = JSON.parse(result);
         
-        statusText.textContent = 'Connected';
+        statusText.textContent = `Connected (v${data.version})`;
         statusElement.className = 'status-indicator connected';
+        
+        // Enable buttons
+        pairBtn.disabled = false;
     } catch (error) {
         console.error('Health check failed:', error);
         statusText.textContent = 'Disconnected';
         statusElement.className = 'status-indicator error';
+        
+        // Disable buttons
+        pairBtn.disabled = true;
     }
 }
 
 // Load paired devices
 async function loadDevices() {
     try {
-        const devices = await invoke('get_devices');
+        const result = await invoke('get_devices');
+        const devices = JSON.parse(result);
         
         if (devices.length === 0) {
             devicesList.innerHTML = `
@@ -54,10 +68,11 @@ async function loadDevices() {
             devicesList.innerHTML = devices.map(device => `
                 <div class="device-item">
                     <div class="device-info">
-                        <h4>💻 ${device}</h4>
-                        <p>Last seen: Just now</p>
+                        <h4>📱 ${device.name}</h4>
+                        <p>Type: ${device.device_type || device.type}</p>
+                        <small>ID: ${device.id.substring(0, 8)}...</small>
                     </div>
-                    <button class="btn-icon" onclick="removeDevice('${device}')">
+                    <button class="btn-icon" onclick="removeDevice('${device.id}')" title="Unpair">
                         🗑️
                     </button>
                 </div>
@@ -65,6 +80,12 @@ async function loadDevices() {
         }
     } catch (error) {
         console.error('Failed to load devices:', error);
+        devicesList.innerHTML = `
+            <div class="empty-state" style="color: #dc3545;">
+                <p>Failed to load devices</p>
+                <small>${error}</small>
+            </div>
+        `;
     }
 }
 
@@ -73,20 +94,33 @@ async function handlePairDevice() {
     try {
         const deviceName = 'Desktop PC';
         const result = await invoke('pair_device', { deviceName });
+        const data = JSON.parse(result);
         
-        // Show QR modal
+        console.log('Pairing response:', data);
+        
+        // Show QR modal with actual QR code
         qrModal.classList.remove('hidden');
         
-        // TODO: Display actual QR code
-        document.getElementById('qr-code').innerHTML = `
-            <div style="padding: 50px; text-align: center;">
-                <p style="font-size: 3rem;">📱</p>
-                <p>QR Code Placeholder</p>
-                <small>Scan with mobile app</small>
-            </div>
-        `;
+        // Display the QR code image from backend
+        if (data.qr_data) {
+            document.getElementById('qr-code').innerHTML = `
+                <img src="${data.qr_data}" alt="Pairing QR Code" style="width: 100%; height: 100%; object-fit: contain;" />
+            `;
+        } else {
+            document.getElementById('qr-code').innerHTML = `
+                <div style="padding: 50px; text-align: center;">
+                    <p style="font-size: 3rem;">📱</p>
+                    <p>QR Code</p>
+                    <small>Device ID: ${data.device_id.substring(0, 8)}...</small>
+                </div>
+            `;
+        }
         
-        console.log('Pairing:', result);
+        // Auto-reload devices after pairing
+        setTimeout(() => {
+            loadDevices();
+        }, 1000);
+        
     } catch (error) {
         console.error('Pairing failed:', error);
         alert('Pairing failed: ' + error);
@@ -101,20 +135,30 @@ function closeQRModal() {
 // Handle file sending
 async function handleSendFile() {
     try {
-        // TODO: Open file picker
-        alert('File picker coming soon...');
+        alert('File picker coming soon...\n\nThis will open a file dialog to select files for transfer.');
     } catch (error) {
         console.error('Send file failed:', error);
     }
 }
 
 // Remove device
-function removeDevice(deviceName) {
-    if (confirm(`Remove ${deviceName}?`)) {
-        // TODO: Remove device via backend
-        loadDevices();
+async function removeDevice(deviceId) {
+    if (confirm('Remove this device?')) {
+        try {
+            // TODO: Call backend delete endpoint
+            console.log('Removing device:', deviceId);
+            loadDevices();
+        } catch (error) {
+            console.error('Failed to remove device:', error);
+        }
     }
 }
 
-// Auto-refresh every 10 seconds
-setInterval(checkHealth, 10000);
+// Make function available globally for onclick
+window.removeDevice = removeDevice;
+window.closeQRModal = closeQRModal;
+
+// Auto-refresh every 30 seconds
+setInterval(() => {
+    checkHealth();
+}, 30000);
