@@ -1,0 +1,59 @@
+name: bridgex_mobile
+description: BridgeX mobile app for P2P file transfer and device control
+publish_to: 'none'
+
+version: 0.1.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # UI
+  cupertino_icons: ^1.0.6
+  
+  # State management
+  provider: ^6.1.1
+  
+  # Networking
+  http: ^1.1.2
+  web_socket_channel: ^2.4.0
+  
+  # QR code
+  qr_code_scanner: ^1.0.1
+  qr_flutter: ^4.1.0
+  
+  # Storage
+  flutter_secure_storage: ^9.0.0
+  shared_preferences: ^2.2.2
+  
+  # File handling
+  file_picker: ^6.1.1
+  path_provider: ^2.1.1
+  
+  # Permissions
+  permission_handler: ^11.1.0
+  
+  # Cryptography
+  crypto: ^3.0.3
+  
+  # Utilities
+  uuid: ^4.2.2
+  intl: ^0.19.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  
+  flutter_lints: ^3.0.1
+  mockito: ^5.4.4
+  build_runner: ^2.4.7
+
+flutter:
+  uses-material-design: true
+
+  # assets:
+  #   - images/
+  #   - icons/

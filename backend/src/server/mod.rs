@@ -2,6 +2,7 @@
 
 pub mod api;
 pub mod p2p;
+pub mod upload;
 
 use serde::{Deserialize, Serialize};
 

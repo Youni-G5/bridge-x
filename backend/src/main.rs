@@ -16,7 +16,7 @@ mod server;
 mod util;
 
 use db::Database;
-use server::api;
+use server::{api, upload};
 
 /// Application state
 #[derive(Clone)]
@@ -63,11 +63,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .route("/api/v1/health", get(api::health))
         .route("/api/v1/pair", post(api::pair))
         .route("/api/v1/transfer", post(api::transfer_init))
+        .route("/api/v1/transfer/:id/upload", post(upload::upload_chunk))
+        .route("/api/v1/transfer/:id/status", get(upload::get_upload_status))
         .route("/api/v1/status", get(api::status))
         .route("/api/v1/devices", get(api::list_devices))
         .route("/api/v1/devices/:id", delete(api::delete_device))
         .with_state(state)
-        .layer(CorsLayer::new().allow_origin(Any).allow_methods(Any))
+        .layer(CorsLayer::new().allow_origin(Any).allow_methods(Any).allow_headers(Any))
         .layer(TraceLayer::new_for_http());
 
     // Get host and port from environment or use defaults
@@ -84,12 +86,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     tracing::info!("BridgeX backend starting on http://{}", addr);
     tracing::info!("API endpoints:");
-    tracing::info!("  GET    /api/v1/health       - Health check");
-    tracing::info!("  POST   /api/v1/pair         - Device pairing");
-    tracing::info!("  POST   /api/v1/transfer     - Initialize transfer");
-    tracing::info!("  GET    /api/v1/status       - Server status");
-    tracing::info!("  GET    /api/v1/devices      - List devices");
-    tracing::info!("  DELETE /api/v1/devices/:id  - Delete device");
+    tracing::info!("  GET    /api/v1/health            - Health check");
+    tracing::info!("  POST   /api/v1/pair              - Device pairing");
+    tracing::info!("  POST   /api/v1/transfer          - Initialize transfer");
+    tracing::info!("  POST   /api/v1/transfer/:id/upload - Upload file chunk");
+    tracing::info!("  GET    /api/v1/transfer/:id/status - Get upload status");
+    tracing::info!("  GET    /api/v1/status            - Server status");
+    tracing::info!("  GET    /api/v1/devices           - List devices");
+    tracing::info!("  DELETE /api/v1/devices/:id       - Delete device");
 
     // Start server
     let listener = tokio::net::TcpListener::bind(addr).await?;
