@@ -1,0 +1,48 @@
+version: 2
+updates:
+  # Rust backend dependencies
+  - package-ecosystem: "cargo"
+    directory: "/backend"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 10
+    labels:
+      - "dependencies"
+      - "rust"
+    commit-message:
+      prefix: "chore(deps)"
+
+  # Tauri desktop dependencies
+  - package-ecosystem: "cargo"
+    directory: "/desktop/src-tauri"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 10
+    labels:
+      - "dependencies"
+      - "tauri"
+    commit-message:
+      prefix: "chore(deps)"
+
+  # Flutter mobile dependencies
+  - package-ecosystem: "pub"
+    directory: "/mobile"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 10
+    labels:
+      - "dependencies"
+      - "flutter"
+    commit-message:
+      prefix: "chore(deps)"
+
+  # GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies"
+      - "ci"
+    commit-message:
+      prefix: "chore(deps)"

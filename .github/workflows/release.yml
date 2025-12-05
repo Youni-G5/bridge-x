@@ -1,0 +1,139 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+permissions:
+  contents: write
+
+jobs:
+  create-release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    outputs:
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
+      version: ${{ steps.get_version.outputs.version }}
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Get version from tag
+      id: get_version
+      run: echo "version=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: BridgeX v${{ steps.get_version.outputs.version }}
+        draft: false
+        prerelease: false
+        body: |
+          ## BridgeX v${{ steps.get_version.outputs.version }}
+          
+          ### Changes
+          See [CHANGELOG.md](https://github.com/Youni-G5/bridge-x/blob/main/CHANGELOG.md) for details.
+          
+          ### Downloads
+          - **Windows**: bridgex-windows-x64.exe
+          - **macOS**: bridgex-macos-x64.dmg
+          - **Linux**: bridgex-linux-x64.AppImage
+          - **Android**: bridgex-android.apk
+          
+          ### Installation
+          See [README.md](https://github.com/Youni-G5/bridge-x#quick-start) for instructions.
+
+  build-desktop:
+    name: Build Desktop (${{ matrix.platform.os }})
+    needs: create-release
+    strategy:
+      matrix:
+        platform:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            artifact: bridgex-linux-x64.AppImage
+          - os: macos-latest
+            target: x86_64-apple-darwin
+            artifact: bridgex-macos-x64.dmg
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            artifact: bridgex-windows-x64.exe
+    
+    runs-on: ${{ matrix.platform.os }}
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Rust
+      uses: dtolnay/rust-toolchain@stable
+      with:
+        targets: ${{ matrix.platform.target }}
+
+    - name: Install Linux dependencies
+      if: matrix.platform.os == 'ubuntu-latest'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.0-dev libappindicator3-dev librsvg2-dev patchelf
+
+    - name: Install Tauri CLI
+      run: cargo install tauri-cli --version '^2.0.0-beta'
+
+    - name: Build Tauri app
+      working-directory: desktop
+      run: cargo tauri build --target ${{ matrix.platform.target }}
+
+    - name: Upload Release Asset
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ needs.create-release.outputs.upload_url }}
+        asset_path: ./desktop/src-tauri/target/${{ matrix.platform.target }}/release/bundle/${{ matrix.platform.artifact }}
+        asset_name: ${{ matrix.platform.artifact }}
+        asset_content_type: application/octet-stream
+
+  build-mobile:
+    name: Build Mobile Android
+    needs: create-release
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: '3.19.0'
+        channel: 'stable'
+
+    - name: Setup Java
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'zulu'
+        java-version: '17'
+
+    - name: Install dependencies
+      working-directory: mobile
+      run: flutter pub get
+
+    - name: Build APK
+      working-directory: mobile
+      run: flutter build apk --release
+
+    - name: Upload Release Asset
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ needs.create-release.outputs.upload_url }}
+        asset_path: mobile/build/app/outputs/flutter-apk/app-release.apk
+        asset_name: bridgex-android.apk
+        asset_content_type: application/vnd.android.package-archive
