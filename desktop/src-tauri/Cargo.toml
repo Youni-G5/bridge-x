@@ -1,0 +1,21 @@
+[package]
+name = "bridgex-desktop"
+version = "0.1.0"
+edition = "2021"
+authors = ["BridgeX Contributors"]
+license = "MIT"
+
+[build-dependencies]
+tauri-build = { version = "2.0.0-beta", features = [] }
+
+[dependencies]
+tauri = { version = "2.0.0-beta", features = ["shell-open"] }
+tauri-plugin-shell = "2.0.0-beta"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tokio = { version = "1", features = ["full"] }
+anyhow = "1"
+
+[features]
+default = ["custom-protocol"]
+custom-protocol = ["tauri/custom-protocol"]

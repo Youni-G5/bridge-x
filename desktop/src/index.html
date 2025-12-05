@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BridgeX</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <h1>🌉 BridgeX</h1>
+            <p class="subtitle">Secure P2P File Transfer</p>
+        </header>
+
+        <!-- Status Card -->
+        <div class="status-card">
+            <div class="status-indicator" id="status">
+                <span class="dot"></span>
+                <span id="status-text">Checking...</span>
+            </div>
+            <button id="refresh-btn" class="btn-icon" title="Refresh">
+                ↻
+            </button>
+        </div>
+
+        <!-- Main Actions -->
+        <div class="main-actions">
+            <button id="pair-btn" class="btn btn-primary">
+                <span>📱</span>
+                Pair Device
+            </button>
+            <button id="send-file-btn" class="btn btn-secondary">
+                <span>📁</span>
+                Send File
+            </button>
+        </div>
+
+        <!-- Devices Section -->
+        <section class="devices-section">
+            <h2>Paired Devices</h2>
+            <div id="devices-list" class="devices-list">
+                <div class="empty-state">
+                    <p>No paired devices</p>
+                    <small>Pair a device to get started</small>
+                </div>
+            </div>
+        </section>
+
+        <!-- QR Code Modal (hidden by default) -->
+        <div id="qr-modal" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Scan QR Code</h3>
+                    <button class="close-btn" onclick="closeQRModal()">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div id="qr-code" class="qr-placeholder">
+                        <p>Generating QR code...</p>
+                    </div>
+                    <p class="qr-instructions">
+                        Open BridgeX mobile app and scan this code to pair
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="main.js"></script>
+</body>
+</html>
