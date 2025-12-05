@@ -23,19 +23,51 @@
     "copyright": "Copyright (c) 2025 BridgeX Contributors",
     "category": "Utility",
     "shortDescription": "P2P file transfer and device control",
-    "longDescription": "BridgeX is a secure, privacy-focused tool for seamless file transfer, clipboard synchronization, and remote control between your PC and mobile devices.",
+    "longDescription": "BridgeX is a secure, privacy-focused tool for seamless file transfer, clipboard synchronization, and remote control between your PC and mobile devices. No cloud required!",
     "linux": {
       "deb": {
         "depends": []
+      },
+      "appimage": {
+        "bundleMediaFramework": true
       }
     },
     "macOS": {
-      "minimumSystemVersion": "10.13"
+      "minimumSystemVersion": "10.13",
+      "exceptionDomain": "",
+      "frameworks": [],
+      "useBootstrapper": true
     },
     "windows": {
       "certificateThumbprint": null,
       "digestAlgorithm": "sha256",
-      "timestampUrl": ""
+      "timestampUrl": "",
+      "webviewInstallMode": {
+        "type": "downloadBootstrapper",
+        "silent": true
+      },
+      "wix": {
+        "language": ["en-US", "fr-FR"],
+        "template": null,
+        "fragmentPaths": [],
+        "componentRefs": [],
+        "featureRefs": [],
+        "mergeRefs": [],
+        "skipWebviewInstall": false,
+        "licenseText": null,
+        "bannerPath": null,
+        "dialogImagePath": null
+      },
+      "nsis": {
+        "license": null,
+        "headerImage": null,
+        "sidebarImage": null,
+        "installerIcon": null,
+        "installMode": "perUser",
+        "languages": ["English", "French"],
+        "displayLanguageSelector": true,
+        "compression": "lzma"
+      }
     }
   },
   "app": {
@@ -48,12 +80,38 @@
         "fullscreen": false,
         "transparent": false,
         "decorations": true,
-        "alwaysOnTop": false
+        "alwaysOnTop": false,
+        "center": true,
+        "skipTaskbar": false,
+        "fileDropEnabled": true
       }
     ],
     "security": {
-      "csp": null
-    }
+      "csp": "default-src 'self'; connect-src 'self' http://127.0.0.1:8080; img-src 'self' data:; style-src 'self' 'unsafe-inline'"
+    },
+    "systemTray": {
+      "iconPath": "icons/icon.png",
+      "iconAsTemplate": true,
+      "menuOnLeftClick": false,
+      "title": "BridgeX"
+    },
+    "withGlobalTauri": true
   },
-  "plugins": {}
+  "plugins": {
+    "updater": {
+      "active": true,
+      "endpoints": [
+        "https://github.com/Youni-G5/bridge-x/releases/latest/download/latest.json"
+      ],
+      "dialog": true,
+      "pubkey": ""
+    },
+    "notification": {
+      "identifier": "com.bridgex.app"
+    },
+    "dialog": {},
+    "fs": {
+      "scope": ["$HOME/Downloads/*", "$HOME/Documents/*"]
+    }
+  }
 }
