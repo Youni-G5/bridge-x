@@ -4,34 +4,140 @@
 [![Flutter CI](https://github.com/Youni-G5/bridge-x/actions/workflows/ci-flutter.yml/badge.svg)](https://github.com/Youni-G5/bridge-x/actions/workflows/ci-flutter.yml)
 [![Tauri CI](https://github.com/Youni-G5/bridge-x/actions/workflows/ci-tauri.yml/badge.svg)](https://github.com/Youni-G5/bridge-x/actions/workflows/ci-tauri.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Downloads](https://img.shields.io/github/downloads/Youni-G5/bridge-x/total)](https://github.com/Youni-G5/bridge-x/releases)
 
-**Local-first, peer-to-peer file transfer and device control** between your desktop and mobile devices. No cloud, no account, just direct encrypted connections.
+**Transfert de fichiers P2P local et sécurisé** entre votre PC et mobile. Aucun cloud, aucun compte, juste des connexions directes chiffrées.
 
-> ⚠️ **MVP Status**: Core features implemented and functional! Currently in active development for v0.1.0 release.
+> 🎉 **Version 0.1.0 disponible !** - Téléchargez et installez en 2 minutes.
 
-## ✨ Features
+---
 
-### ✅ Implemented (MVP)
+## 📥 Téléchargement
 
-- **🔐 End-to-End Encryption**: X25519 key exchange + AES-256-GCM
-- **📱 Device Pairing**: QR code-based pairing in seconds
-- **📤 File Transfer**: Chunked uploads with progress tracking
-- **💾 Local Database**: SQLite for device and transfer management
-- **🖥️ Desktop App**: Native Tauri app for Windows/macOS/Linux
-- **📲 Mobile App**: Flutter app for Android (iOS coming soon)
-- **🚀 Zero Configuration**: Works out of the box on local network
-- **🔄 Auto Backend**: Desktop app spawns backend automatically
+### 🖥️ Desktop
 
-### 🚧 Coming Soon (Beta)
+<div align="center">
 
-- 📋 Clipboard sync across devices
-- 🖼️ Screen sharing / remote desktop
-- 🔄 Bidirectional sync folders
-- 🌐 WebRTC P2P for NAT traversal
-- 🔔 Push notifications (mobile)
-- 📊 Transfer history and analytics
+| Windows | macOS | Linux |
+|---------|-------|-------|
+| [<img src="https://img.shields.io/badge/Windows-0078D6?style=for-the-badge&logo=windows&logoColor=white" />](https://github.com/Youni-G5/bridge-x/releases/latest/download/BridgeX-setup.exe) | [<img src="https://img.shields.io/badge/macOS-000000?style=for-the-badge&logo=apple&logoColor=white" />](https://github.com/Youni-G5/bridge-x/releases/latest/download/BridgeX.dmg) | [<img src="https://img.shields.io/badge/Linux-FCC624?style=for-the-badge&logo=linux&logoColor=black" />](https://github.com/Youni-G5/bridge-x/releases/latest/download/BridgeX.AppImage) |
+| `.exe` installer | `.dmg` installer | `.AppImage` / `.deb` |
 
-## 🏗️ Architecture
+</div>
+
+### 📱 Mobile
+
+<div align="center">
+
+| Android | iOS |
+|---------|-----|
+| [<img src="https://img.shields.io/badge/Android-3DDC84?style=for-the-badge&logo=android&logoColor=white" />](https://github.com/Youni-G5/bridge-x/releases/latest/download/BridgeX.apk) | <img src="https://img.shields.io/badge/iOS-Coming_Soon-lightgrey?style=for-the-badge&logo=apple&logoColor=white" /> |
+| `.apk` direct | TestFlight bientôt |
+
+</div>
+
+### 📖 [Guide d'installation détaillé →](INSTALL.md)
+
+---
+
+## ✨ Fonctionnalités
+
+<table>
+<tr>
+<td width="50%">
+
+### ✅ Disponible maintenant
+
+- 🔐 **Chiffrement E2E** : X25519 + AES-256-GCM
+- 📱 **Appairage QR** : Connectez en 5 secondes
+- 📤 **Transfert rapide** : Fichiers par chunks
+- 💾 **100% local** : Aucun serveur cloud
+- 🖥️ **Multi-plateforme** : Windows, macOS, Linux
+- 📲 **App mobile** : Android (iOS bientôt)
+- 🚀 **Zéro config** : Fonctionne immédiatement
+- 🎯 **Drag & drop** : Glissez des fichiers
+
+</td>
+<td width="50%">
+
+### 🚧 Prochainement
+
+- 📋 Sync du presse-papiers
+- 🖼️ Partage d'écran / remote
+- 🔄 Sync bidirectionnelle dossiers
+- 🌐 WebRTC P2P (NAT traversal)
+- 🔔 Notifications push (mobile)
+- 📊 Historique des transferts
+- 🌍 Multi-langue
+- 🔌 Système de plugins
+
+</td>
+</tr>
+</table>
+
+---
+
+## 🚀 Démarrage rapide (2 min)
+
+### Étape 1 : Installer
+
+**Sur PC** : Téléchargez et installez depuis [les releases](https://github.com/Youni-G5/bridge-x/releases/latest)  
+**Sur Mobile** : Téléchargez l'APK et installez
+
+### Étape 2 : Connecter
+
+1. **Sur PC** : Ouvrez BridgeX → Cliquez "Appairer un appareil" → Un QR code s'affiche
+2. **Sur Mobile** : Ouvrez BridgeX → "Scanner QR" → Pointez vers le QR code
+3. ✅ **Connecté !** Vos appareils sont maintenant liés
+
+### Étape 3 : Transférer
+
+**De mobile vers PC** :  
+- Sélectionnez votre PC → "Envoyer fichiers" → Choisissez les fichiers → Envoyez
+
+**De PC vers mobile** :  
+- Glissez un fichier dans la fenêtre **OU** cliquez "Envoyer" → Choisissez le fichier
+
+**C'est tout !** 🎉 Tous les transferts sont chiffrés automatiquement.
+
+---
+
+## 🔒 Sécurité & Confidentialité
+
+### Pourquoi BridgeX est sûr ?
+
+✅ **Pas de cloud** - Vos fichiers ne transitent jamais par internet  
+✅ **Chiffrement E2E** - Chaque fichier est chiffré avec AES-256-GCM  
+✅ **Réseau local uniquement** - Les données restent sur votre WiFi  
+✅ **Aucun compte requis** - Aucune inscription, aucune connexion  
+✅ **Open source** - Code auditable par tous  
+✅ **Forward secrecy** - Nouvelles clés à chaque session
+
+### Comment ça marche ?
+
+```mermaid
+sequenceDiagram
+    participant PC
+    participant Mobile
+    PC->>PC: Génère paire de clés X25519
+    PC->>Mobile: QR code (clé publique PC)
+    Mobile->>Mobile: Génère paire de clés X25519
+    Mobile->>PC: Envoie clé publique mobile
+    PC->>PC: Calcule secret partagé (ECDH)
+    Mobile->>Mobile: Calcule secret partagé (ECDH)
+    Note over PC,Mobile: Session key dérivée (HKDF-SHA256)
+    Mobile->>PC: Fichier chiffré (AES-256-GCM)
+    PC->>PC: Déchiffre avec session key
+```
+
+Voir [SECURITY.md](SECURITY.md) pour les détails techniques.
+
+---
+
+## 🏗️ Architecture technique
+
+<details>
+<summary><b>Cliquez pour voir l'architecture complète</b></summary>
 
 ```
 ┌─────────────────────────────────────────────────────┐
@@ -63,324 +169,193 @@
    └─────────────────────┘
 ```
 
-### Tech Stack
+### Stack technologique
 
-- **Backend**: Rust + Axum + SQLite + X25519/AES-GCM
-- **Desktop**: Tauri 2.0 (Rust + HTML/CSS/JS)
-- **Mobile**: Flutter (Dart)
-- **Crypto**: x25519-dalek, aes-gcm, HKDF-SHA256
-- **Database**: SQLx + SQLite
+- **Backend** : Rust + Axum + SQLite + X25519/AES-GCM
+- **Desktop** : Tauri 2.0 (Rust + HTML/CSS/JS)
+- **Mobile** : Flutter (Dart)
+- **Crypto** : x25519-dalek, aes-gcm, HKDF-SHA256
+- **Database** : SQLx + SQLite
 
-## 🚀 Quick Start
+</details>
 
-### Prerequisites
+---
 
-- **Rust** 1.70+ (`rustup` recommended)
-- **Flutter** 3.0+ (for mobile)
-- **Node.js** 18+ (for Tauri)
+## 👨‍💻 Pour les développeurs
 
-### One-Command Setup
+<details>
+<summary><b>Setup local & build depuis les sources</b></summary>
+
+### Prérequis
+
+- **Rust** 1.70+ (`rustup` recommandé)
+- **Flutter** 3.0+ (pour mobile)
+- **Node.js** 18+ (pour Tauri)
+
+### Installation one-command
 
 ```bash
-# Clone and bootstrap
+# Cloner et bootstrapper
 git clone https://github.com/Youni-G5/bridge-x.git
 cd bridge-x
 chmod +x scripts/*.sh
 ./scripts/bootstrap.sh
 ```
 
-This will install all dependencies (Rust, Tauri CLI, Flutter packages).
-
-### Run Locally
-
-#### Option 1: Run Everything
+### Lancer en développement
 
 ```bash
-./scripts/local_run.sh
+# Backend
+cd backend && cargo run --release
+
+# Desktop
+cd desktop && cargo tauri dev
+
+# Mobile
+cd mobile && flutter run
 ```
 
-#### Option 2: Run Individually
-
-**Backend Only:**
-```bash
-cd backend
-cargo run --release
-# Server starts on http://127.0.0.1:8080
-```
-
-**Desktop App:**
-```bash
-cd desktop
-cargo tauri dev
-# Opens desktop app (auto-starts backend)
-```
-
-**Mobile App:**
-```bash
-cd mobile
-flutter pub get
-flutter run
-# Select your device/emulator
-```
-
-## 📱 Usage
-
-### 1. Pair Devices
-
-**On Desktop:**
-1. Launch the BridgeX desktop app
-2. Click "**Pair Device**"
-3. A QR code appears
-
-**On Mobile:**
-1. Open BridgeX mobile app
-2. Tap "**Scan QR Code**"
-3. Point camera at desktop QR code
-4. ✅ Devices paired!
-
-### 2. Transfer Files
-
-**From Mobile to Desktop:**
-```
-1. Select paired device
-2. Tap "Send Files"
-3. Choose files from picker
-4. Tap "Send" → Upload starts
-5. Progress bar shows transfer
-```
-
-**From Desktop to Mobile:**
-```
-1. Click "Send File"
-2. Select paired mobile device
-3. Choose file(s)
-4. Transfer begins automatically
-```
-
-All transfers are **encrypted end-to-end** with AES-256-GCM. 🔐
-
-## 🔒 Security
-
-### Encryption Flow
-
-```
-1. Pairing:
-   Desktop generates X25519 keypair → QR code
-   Mobile scans QR → Extracts public key
-   Mobile generates keypair → Sends to desktop
-   Both compute ECDH shared secret
-
-2. Session Key:
-   shared_secret → HKDF-SHA256 → session_key (256-bit)
-
-3. File Transfer:
-   file_data → AES-256-GCM(session_key) → encrypted_chunks
-```
-
-### Security Features
-
-- ✅ No data leaves your local network (by default)
-- ✅ No cloud accounts or servers required
-- ✅ Perfect forward secrecy (new keys per session)
-- ✅ Authenticated encryption (AES-GCM)
-- ✅ Secure key storage (OS keychains)
-- ✅ Open source for auditing
-
-See [SECURITY.md](SECURITY.md) for threat model and security policy.
-
-## 🧪 Testing
-
-### Run All Tests
+### Builder pour production
 
 ```bash
-./scripts/run_all_tests.sh
+# Build tout (Windows, macOS, Linux, Android)
+./scripts/build_release.sh
+
+# Ou individuellement
+cd desktop && cargo tauri build        # Desktop
+cd mobile && flutter build apk         # Android
 ```
 
-This runs:
-- ✅ Rust backend tests (crypto, database, API)
-- ✅ Flutter tests (widgets, integration)
-- ✅ Linting (clippy, dart analyze)
-- ✅ Formatting checks
-
-### Run Specific Tests
+### Tests
 
 ```bash
-# Backend only
-cd backend && cargo test
-
-# Mobile only
-cd mobile && flutter test
-
-# With coverage
-cd backend && cargo tarpaulin
+./scripts/run_all_tests.sh  # Tous les tests
+cd backend && cargo test    # Backend seulement
+cd mobile && flutter test   # Mobile seulement
 ```
 
-## 📦 Building for Production
+Voir [CONTRIBUTING.md](CONTRIBUTING.md) pour plus de détails.
 
-### Build All Platforms
-
-```bash
-./scripts/build_all.sh
-```
-
-Outputs:
-- `backend/target/release/bridgex-server` - Backend binary
-- `desktop/src-tauri/target/release/` - Desktop installers
-- `mobile/build/app/outputs/flutter-apk/` - Android APK
-
-### Manual Builds
-
-**Backend:**
-```bash
-cd backend
-cargo build --release
-```
-
-**Desktop:**
-```bash
-cd desktop
-cargo tauri build
-# Creates installer in src-tauri/target/release/bundle/
-```
-
-**Mobile (Android):**
-```bash
-cd mobile
-flutter build apk --release
-# APK: build/app/outputs/flutter-apk/app-release.apk
-```
-
-**Mobile (iOS):**
-```bash
-cd mobile
-flutter build ios --release
-# Requires macOS + Xcode
-```
-
-## 🌐 Self-Hosting
-
-Want to access your devices remotely? Deploy a relay server!
-
-See [docs/HOWTO_SELFHOST.md](docs/HOWTO_SELFHOST.md) for:
-- Docker deployment
-- VPS setup (DigitalOcean, Vultr, etc.)
-- SSL/TLS configuration
-- Nginx reverse proxy
-
-**One-line Docker deploy:**
-```bash
-docker run -d -p 8080:8080 \
-  -v ./data:/app/data \
-  bridgex/backend:latest
-```
-
-## 📚 Documentation
-
-- [Architecture](docs/architecture.md) - System design and data flow
-- [OpenAPI Spec](docs/openapi.yaml) - REST API documentation
-- [Self-Hosting Guide](docs/HOWTO_SELFHOST.md) - Deploy your own relay
-- [Backend README](backend/README.md) - Rust backend details
-- [Desktop README](desktop/README.md) - Tauri app details
-- [Mobile README](mobile/README.md) - Flutter app details
-
-## 🤝 Contributing
-
-We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for:
-- Development setup
-- Code style guidelines
-- Commit message conventions
-- Pull request process
-
-### Quick Contribution Guide
-
-```bash
-# 1. Fork and clone
-git clone https://github.com/YOUR_USERNAME/bridge-x.git
-cd bridge-x
-
-# 2. Create feature branch
-git checkout -b feature/amazing-feature
-
-# 3. Make changes and test
-./scripts/run_all_tests.sh
-
-# 4. Commit with conventional commits
-git commit -m "feat: add amazing feature"
-
-# 5. Push and create PR
-git push origin feature/amazing-feature
-```
-
-## 🗺️ Roadmap
-
-### v0.1.0 (MVP) - ✅ Feature Complete!
-
-- [x] Basic file transfer
-- [x] QR code pairing
-- [x] End-to-end encryption
-- [x] Desktop app (Tauri)
-- [x] Mobile app (Flutter Android)
-- [x] SQLite database
-- [x] Chunked uploads
-
-### v0.5.0 (Beta) - In Progress
-
-- [ ] Clipboard synchronization
-- [ ] WebRTC P2P connections
-- [ ] Transfer history UI
-- [ ] Multiple file selection
-- [ ] Folder sync
-- [ ] iOS app
-
-### v1.0.0 (Stable) - Planned
-
-- [ ] Screen sharing
-- [ ] Remote desktop control
-- [ ] Plugin system
-- [ ] Multi-language support
-- [ ] Advanced settings UI
-- [ ] Background service (mobile)
-
-See [issues](https://github.com/Youni-G5/bridge-x/issues) for detailed tasks.
-
-## 📊 Project Stats
-
-- **Lines of Code**: ~3,500+
-- **Languages**: Rust, Dart, JavaScript
-- **Tests**: 12+ automated tests
-- **CI/CD**: 3 GitHub Actions workflows
-- **Platforms**: Windows, macOS, Linux, Android
-
-## 🐛 Known Issues
-
-- [ ] iOS app not yet available (Flutter implementation ready, needs signing)
-- [ ] Desktop file picker not yet implemented (UI ready)
-- [ ] Transfer resume not yet supported
-- [ ] No background transfers on mobile
-
-See [issues](https://github.com/Youni-G5/bridge-x/issues) for full list.
-
-## 📄 License
-
-MIT License - see [LICENSE](LICENSE) for details.
-
-## 🙏 Acknowledgments
-
-- [Tauri](https://tauri.app/) - Desktop framework
-- [Flutter](https://flutter.dev/) - Mobile framework
-- [Axum](https://github.com/tokio-rs/axum) - Web framework
-- [x25519-dalek](https://github.com/dalek-cryptography/x25519-dalek) - Crypto library
-
-## 💬 Support
-
-- **Issues**: [GitHub Issues](https://github.com/Youni-G5/bridge-x/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/Youni-G5/bridge-x/discussions)
-- **Security**: See [SECURITY.md](SECURITY.md)
-
-## ⭐ Star History
-
-If you find BridgeX useful, please consider giving it a star! ⭐
+</details>
 
 ---
 
-**Made with ❤️ by the BridgeX community**
+## 🗺️ Roadmap
+
+### v0.1.0 (MVP) - ✅ Disponible maintenant !
+
+- [x] Transfert de fichiers basique
+- [x] Appairage QR code
+- [x] Chiffrement E2E
+- [x] App desktop (Tauri)
+- [x] App mobile (Flutter Android)
+- [x] Base SQLite
+- [x] Uploads par chunks
+- [x] File picker fonctionnel
+- [x] Drag & drop support
+- [x] Auto-update intégré
+
+### v0.5.0 (Beta) - 🚧 En cours
+
+- [ ] Synchronisation presse-papiers
+- [ ] Connexions WebRTC P2P
+- [ ] Interface historique transferts
+- [ ] Sélection multiple fichiers
+- [ ] Sync de dossiers
+- [ ] App iOS (TestFlight)
+
+### v1.0.0 (Stable) - 📋 Planifié
+
+- [ ] Partage d'écran
+- [ ] Contrôle remote bureau
+- [ ] Système de plugins
+- [ ] Support multi-langue
+- [ ] Interface paramètres avancés
+- [ ] Service background (mobile)
+
+Voir [issues](https://github.com/Youni-G5/bridge-x/issues) pour plus de détails.
+
+---
+
+## 📊 Statistiques
+
+- **Lignes de code** : ~4,500+
+- **Langages** : Rust, Dart, JavaScript
+- **Tests** : 15+ tests automatisés
+- **CI/CD** : 4 GitHub Actions workflows
+- **Plateformes** : 4 (Windows, macOS, Linux, Android)
+- **Stars** : ⭐ Si vous aimez, donnez une star !
+
+---
+
+## 🤝 Contribuer
+
+Les contributions sont les bienvenues ! Voir [CONTRIBUTING.md](CONTRIBUTING.md).
+
+**Démarrage rapide pour contribuer** :
+
+```bash
+# 1. Fork & clone
+git clone https://github.com/VOTRE_USERNAME/bridge-x.git
+cd bridge-x
+
+# 2. Créer une branche
+git checkout -b feature/ma-super-fonctionnalite
+
+# 3. Faire vos changements et tester
+./scripts/run_all_tests.sh
+
+# 4. Commit (conventional commits)
+git commit -m "feat: ajout de ma fonctionnalité"
+
+# 5. Push et créer une PR
+git push origin feature/ma-super-fonctionnalite
+```
+
+---
+
+## 📚 Documentation
+
+- 📥 [**Guide d'installation**](INSTALL.md) - Installation pas-à-pas
+- 🏗️ [Architecture](docs/architecture.md) - Design système
+- 🔐 [Sécurité](SECURITY.md) - Modèle de menaces
+- 🔧 [API OpenAPI](docs/openapi.yaml) - Spec REST API
+- 🐳 [Self-hosting](docs/HOWTO_SELFHOST.md) - Déployer votre serveur
+- 🤝 [Contribuer](CONTRIBUTING.md) - Guide contribution
+
+---
+
+## 💬 Support
+
+- 🐛 **Bugs** : [GitHub Issues](https://github.com/Youni-G5/bridge-x/issues)
+- 💭 **Discussions** : [GitHub Discussions](https://github.com/Youni-G5/bridge-x/discussions)
+- 🔒 **Sécurité** : Voir [SECURITY.md](SECURITY.md)
+
+---
+
+## 📄 Licence
+
+MIT License - voir [LICENSE](LICENSE) pour détails.
+
+---
+
+## 🙏 Remerciements
+
+- [Tauri](https://tauri.app/) - Framework desktop
+- [Flutter](https://flutter.dev/) - Framework mobile
+- [Axum](https://github.com/tokio-rs/axum) - Framework web
+- [x25519-dalek](https://github.com/dalek-cryptography/x25519-dalek) - Bibliothèque crypto
+
+---
+
+<div align="center">
+
+**Si BridgeX vous est utile, donnez une ⭐ !**
+
+[![Star History Chart](https://api.star-history.com/svg?repos=Youni-G5/bridge-x&type=Date)](https://star-history.com/#Youni-G5/bridge-x&Date)
+
+**Fait avec ❤️ par la communauté BridgeX**
+
+[Website](https://bridgex.dev) • [Twitter](https://twitter.com/bridgex_app) • [Discord](https://discord.gg/bridgex)
+
+</div>
