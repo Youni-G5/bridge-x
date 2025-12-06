@@ -1,27 +1,13 @@
 // Prevents additional console window on Windows in release
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use std::process::{Child, Command};
-use std::sync::Mutex;
-use tauri::{Manager, State};
+mod backend_manager;
+mod file_picker;
 
-/// Backend process state
-struct BackendProcess {
-    child: Mutex<Option<Child>>,
-}
-
-/// Health check command
-#[tauri::command]
-async fn check_health() -> Result<String, String> {
-    match reqwest::get("http://127.0.0.1:8080/api/v1/health").await {
-        Ok(resp) if resp.status().is_success() => {
-            let body = resp.text().await.map_err(|e| e.to_string())?;
-            Ok(body)
-        }
-        Ok(resp) => Err(format!("Backend returned status: {}", resp.status())),
-        Err(e) => Err(format!("Backend connection failed: {}", e)),
-    }
-}
+use std::sync::Arc;
+use backend_manager::{BackendManager, check_backend_status, restart_backend};
+use file_picker::{pick_file, pick_files, pick_folder, get_file_info, read_file_base64};
+use tauri::Manager;
 
 /// Request device pairing
 #[tauri::command]
@@ -38,8 +24,7 @@ async fn pair_device(device_name: String) -> Result<String, String> {
         .await
     {
         Ok(resp) if resp.status().is_success() => {
-            let body = resp.text().await.map_err(|e| e.to_string())?;
-            Ok(body)
+            resp.text().await.map_err(|e| e.to_string())
         }
         Ok(resp) => Err(format!("Pairing failed: {}", resp.status())),
         Err(e) => Err(format!("Request failed: {}", e)),
@@ -51,8 +36,7 @@ async fn pair_device(device_name: String) -> Result<String, String> {
 async fn get_devices() -> Result<String, String> {
     match reqwest::get("http://127.0.0.1:8080/api/v1/devices").await {
         Ok(resp) if resp.status().is_success() => {
-            let body = resp.text().await.map_err(|e| e.to_string())?;
-            Ok(body)
+            resp.text().await.map_err(|e| e.to_string())
         }
         Ok(resp) => Err(format!("Failed to get devices: {}", resp.status())),
         Err(e) => Err(format!("Request failed: {}", e)),
@@ -62,100 +46,140 @@ async fn get_devices() -> Result<String, String> {
 /// Initialize file transfer
 #[tauri::command]
 async fn send_file(device_id: String, file_path: String) -> Result<String, String> {
-    // TODO: Implement file transfer
-    Ok(format!(
-        "Transfer initiated: {} to {}",
-        file_path, device_id
-    ))
-}
-
-/// Start the backend server process
-fn start_backend() -> Result<Child, std::io::Error> {
-    #[cfg(target_os = "windows")]
-    let backend_exe = "bridgex-server.exe";
-
-    #[cfg(not(target_os = "windows"))]
-    let backend_exe = "bridgex-server";
-
-    // Try to find backend in multiple locations
-    let possible_paths = vec![
-        format!("./backend/target/release/{}", backend_exe),
-        format!("./backend/target/debug/{}", backend_exe),
-        format!("../backend/target/release/{}", backend_exe),
-        format!("../../backend/target/release/{}", backend_exe),
-        backend_exe.to_string(), // In PATH
-    ];
-
-    for path in possible_paths {
-        if std::path::Path::new(&path).exists() || path == backend_exe {
-            println!("Attempting to start backend: {}", path);
-            match Command::new(&path)
-                .env("BRIDGEX_HOST", "127.0.0.1")
-                .env("BRIDGEX_PORT", "8080")
-                .spawn()
-            {
-                Ok(child) => {
-                    println!("✅ Backend started successfully (PID: {})", child.id());
-                    return Ok(child);
-                }
-                Err(e) => {
-                    println!("❌ Failed to start backend from {}: {}", path, e);
-                    continue;
-                }
-            }
-        }
+    let client = reqwest::Client::new();
+    
+    // Read file metadata
+    let metadata = tokio::fs::metadata(&file_path)
+        .await
+        .map_err(|e| format!("Failed to read file: {}", e))?;
+    
+    let file_size = metadata.len();
+    let file_name = std::path::Path::new(&file_path)
+        .file_name()
+        .and_then(|n| n.to_str())
+        .ok_or("Invalid file name")?;
+    
+    // Initialize transfer
+    let init_payload = serde_json::json!({
+        "device_id": device_id,
+        "file_name": file_name,
+        "file_size": file_size,
+    });
+    
+    let init_resp = client
+        .post("http://127.0.0.1:8080/api/v1/transfer/init")
+        .json(&init_payload)
+        .send()
+        .await
+        .map_err(|e| e.to_string())?;
+    
+    if !init_resp.status().is_success() {
+        return Err(format!("Transfer init failed: {}", init_resp.status()));
     }
-
-    Err(std::io::Error::new(
-        std::io::ErrorKind::NotFound,
-        format!("Backend executable '{}' not found", backend_exe),
-    ))
+    
+    let init_data: serde_json::Value = init_resp.json()
+        .await
+        .map_err(|e| e.to_string())?;
+    
+    let transfer_id = init_data["transfer_id"]
+        .as_str()
+        .ok_or("Missing transfer_id")?;
+    
+    // Read and upload file in chunks
+    let file_data = tokio::fs::read(&file_path)
+        .await
+        .map_err(|e| format!("Failed to read file data: {}", e))?;
+    
+    let chunk_size = 1024 * 1024; // 1MB chunks
+    let mut offset = 0;
+    
+    while offset < file_data.len() {
+        let end = std::cmp::min(offset + chunk_size, file_data.len());
+        let chunk = &file_data[offset..end];
+        
+        let form = reqwest::multipart::Form::new()
+            .text("transfer_id", transfer_id.to_string())
+            .text("offset", offset.to_string())
+            .part("chunk", reqwest::multipart::Part::bytes(chunk.to_vec()));
+        
+        let upload_resp = client
+            .post("http://127.0.0.1:8080/api/v1/transfer/upload")
+            .multipart(form)
+            .send()
+            .await
+            .map_err(|e| e.to_string())?;
+        
+        if !upload_resp.status().is_success() {
+            return Err(format!("Chunk upload failed at offset {}: {}", offset, upload_resp.status()));
+        }
+        
+        offset = end;
+    }
+    
+    // Finalize transfer
+    let finalize_payload = serde_json::json!({
+        "transfer_id": transfer_id,
+    });
+    
+    let finalize_resp = client
+        .post("http://127.0.0.1:8080/api/v1/transfer/finalize")
+        .json(&finalize_payload)
+        .send()
+        .await
+        .map_err(|e| e.to_string())?;
+    
+    if !finalize_resp.status().is_success() {
+        return Err(format!("Transfer finalize failed: {}", finalize_resp.status()));
+    }
+    
+    Ok(format!("File '{}' transferred successfully to device {}", file_name, device_id))
 }
 
-fn main() {
+#[tokio::main]
+async fn main() {
+    // Initialize backend manager
+    let backend = BackendManager::new(8080);
+    let backend_arc = Arc::new(backend);
+    
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
-        .manage(BackendProcess {
-            child: Mutex::new(None),
-        })
+        .manage(backend_arc.clone())
         .invoke_handler(tauri::generate_handler![
-            check_health,
+            check_backend_status,
+            restart_backend,
+            pick_file,
+            pick_files,
+            pick_folder,
+            get_file_info,
+            read_file_base64,
             pair_device,
             get_devices,
             send_file,
         ])
-        .setup(|app| {
-            let backend_state = app.state::<BackendProcess>();
-
-            // Start backend server
-            println!("🚀 Starting BridgeX backend...");
-            match start_backend() {
-                Ok(child) => {
-                    *backend_state.child.lock().unwrap() = Some(child);
-                    println!("✅ Backend process started");
+        .setup(move |app| {
+            let backend_clone = backend_arc.clone();
+            
+            // Start backend in async task
+            tauri::async_runtime::spawn(async move {
+                println!("🚀 Starting BridgeX backend...");
+                
+                if let Err(e) = backend_clone.start() {
+                    eprintln!("❌ Failed to start backend: {}", e);
+                    eprintln!("   Please ensure the backend binary is available");
+                    return;
                 }
-                Err(e) => {
-                    eprintln!("⚠️  Failed to start backend: {}", e);
-                    eprintln!("   The app will try to connect to an existing backend on port 8080");
-                }
-            }
-
-            // Wait a moment for backend to start
-            std::thread::sleep(std::time::Duration::from_secs(2));
-
-            Ok(())
-        })
-        .on_window_event(|window, event| {
-            if let tauri::WindowEvent::Destroyed = event {
-                // Cleanup: kill backend process
-                if let Some(backend_state) = window.try_state::<BackendProcess>() {
-                    if let Some(mut child) = backend_state.child.lock().unwrap().take() {
-                        println!("🛑 Stopping backend process...");
-                        let _ = child.kill();
-                        println!("✅ Backend stopped");
+                
+                println!("⏳ Waiting for backend to be ready...");
+                match backend_clone.wait_ready(15).await {
+                    Ok(_) => println!("✅ Backend is ready and healthy!"),
+                    Err(e) => {
+                        eprintln!("⚠️  Backend health check failed: {}", e);
+                        eprintln!("   The app will continue but may not function correctly");
                     }
                 }
-            }
+            });
+            
+            Ok(())
         })
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
