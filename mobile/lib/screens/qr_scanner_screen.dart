@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:qr_code_scanner/qr_code_scanner.dart';
-import 'package:provider/provider.dart';
-import '../services/pairing_service.dart';
+import 'dart:io';
+import '../services/api_service.dart';
 
 class QRScannerScreen extends StatefulWidget {
-  const QRScannerScreen({super.key});
+  const QRScannerScreen({Key? key}) : super(key: key);
 
   @override
   State<QRScannerScreen> createState() => _QRScannerScreenState();
@@ -13,74 +13,123 @@ class QRScannerScreen extends StatefulWidget {
 class _QRScannerScreenState extends State<QRScannerScreen> {
   final GlobalKey qrKey = GlobalKey(debugLabel: 'QR');
   QRViewController? controller;
-  bool _isProcessing = false;
+  bool isProcessing = false;
+  String? errorMessage;
 
   @override
-  void dispose() {
-    controller?.dispose();
-    super.dispose();
+  void reassemble() {
+    super.reassemble();
+    if (Platform.isAndroid) {
+      controller?.pauseCamera();
+    }
+    controller?.resumeCamera();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Scan QR Code'),
-        backgroundColor: Colors.black,
+        title: const Text('Scanner QR Code'),
+        backgroundColor: Colors.blue.shade700,
       ),
-      body: Column(
+      body: Stack(
         children: [
-          Expanded(
-            flex: 5,
-            child: QRView(
-              key: qrKey,
-              onQRViewCreated: _onQRViewCreated,
-              overlay: QrScannerOverlayShape(
-                borderColor: Colors.blue,
-                borderRadius: 10,
-                borderLength: 30,
-                borderWidth: 10,
-                cutOutSize: 300,
-              ),
+          QRView(
+            key: qrKey,
+            onQRViewCreated: _onQRViewCreated,
+            overlay: QrScannerOverlayShape(
+              borderColor: Colors.blue,
+              borderRadius: 10,
+              borderLength: 30,
+              borderWidth: 10,
+              cutOutSize: 300,
             ),
           ),
-          Expanded(
-            flex: 1,
+          
+          Positioned(
+            bottom: 100,
+            left: 0,
+            right: 0,
             child: Container(
-              color: Colors.black87,
-              child: Center(
-                child: _isProcessing
-                    ? const Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          CircularProgressIndicator(color: Colors.white),
-                          SizedBox(height: 16),
-                          Text(
-                            'Processing pairing...',
-                            style: TextStyle(color: Colors.white),
-                          ),
-                        ],
-                      )
-                    : const Text(
-                        'Scan the QR code from your desktop app',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                        ),
-                        textAlign: TextAlign.center,
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 12,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withOpacity(0.7),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Text(
+                      'Pointez vers le QR code affiché sur votre PC',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
                       ),
+                    ),
+                  ),
+                  if (errorMessage != null)
+                    Container(
+                      margin: const EdgeInsets.only(top: 10),
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.red.withOpacity(0.9),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        errorMessage!,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ),
+                ],
               ),
             ),
           ),
+          
+          if (isProcessing)
+            Container(
+              color: Colors.black.withOpacity(0.7),
+              child: const Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
+                    ),
+                    SizedBox(height: 20),
+                    Text(
+                      'Appairage en cours...',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
         ],
       ),
     );
   }
 
   void _onQRViewCreated(QRViewController controller) {
-    this.controller = controller;
+    setState(() {
+      this.controller = controller;
+    });
+
     controller.scannedDataStream.listen((scanData) {
-      if (!_isProcessing && scanData.code != null) {
+      if (!isProcessing && scanData.code != null) {
         _handleQRCode(scanData.code!);
       }
     });
@@ -88,57 +137,58 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
 
   Future<void> _handleQRCode(String qrData) async {
     setState(() {
-      _isProcessing = true;
+      isProcessing = true;
+      errorMessage = null;
     });
 
     try {
-      // Pause scanning
-      await controller?.pauseCamera();
+      if (!qrData.startsWith('bridgex://pair?')) {
+        throw Exception('QR code invalide');
+      }
 
-      final pairingService = context.read<PairingService>();
-      final success = await pairingService.processPairingQR(qrData);
+      final uri = Uri.parse(qrData);
+      final pairingData = uri.queryParameters['data'];
 
-      if (!mounted) return;
+      if (pairingData == null) {
+        throw Exception('Données manquantes');
+      }
 
-      if (success) {
-        // Show success message
+      final apiService = ApiService();
+      await apiService.pairDevice(
+        deviceName: '${Platform.isAndroid ? 'Android' : 'iOS'} Mobile',
+        pairingData: pairingData,
+      );
+
+      if (mounted) {
+        controller?.pauseCamera();
+        Navigator.pop(context, true);
+        
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('✅ Device paired successfully!'),
+            content: Text('✅ Appareils appairés !'),
             backgroundColor: Colors.green,
           ),
         );
-
-        // Go back to home
-        Navigator.pop(context, true);
-      } else {
-        // Show error and resume scanning
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('❌ Pairing failed. Please try again.'),
-            backgroundColor: Colors.red,
-          ),
-        );
-
-        await controller?.resumeCamera();
-        setState(() {
-          _isProcessing = false;
-        });
       }
     } catch (e) {
-      if (!mounted) return;
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
-
-      await controller?.resumeCamera();
       setState(() {
-        _isProcessing = false;
+        errorMessage = e.toString().replaceAll('Exception: ', '');
+        isProcessing = false;
+      });
+
+      Future.delayed(const Duration(seconds: 3), () {
+        if (mounted) {
+          setState(() {
+            errorMessage = null;
+          });
+        }
       });
     }
+  }
+
+  @override
+  void dispose() {
+    controller?.dispose();
+    super.dispose();
   }
 }
