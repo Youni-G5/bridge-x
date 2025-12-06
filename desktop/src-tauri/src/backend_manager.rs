@@ -1,7 +1,6 @@
 use std::process::{Child, Command};
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
-use tauri::{AppHandle, Manager};
 
 #[derive(Debug)]
 pub struct BackendManager {
@@ -58,7 +57,7 @@ impl BackendManager {
 
     /// Check if backend is running and healthy
     pub async fn is_healthy(&self) -> bool {
-        let url = format!("http://127.0.0.1:{}/health", self.port);
+        let url = format!("http://127.0.0.1:{}/api/v1/health", self.port);  // Fixed: added /api/v1
         
         match reqwest::get(&url).await {
             Ok(resp) => resp.status().is_success(),
@@ -136,17 +135,19 @@ impl Drop for BackendManager {
 
 /// Tauri command to check backend status
 #[tauri::command]
-pub async fn check_backend_status(app: AppHandle) -> Result<bool, String> {
-    let backend = app.state::<Arc<BackendManager>>();
+pub async fn check_backend_status(
+    backend: tauri::State<'_, Arc<BackendManager>>  // Fixed: use State properly
+) -> Result<bool, String> {
     Ok(backend.is_healthy().await)
 }
 
 /// Tauri command to restart backend
 #[tauri::command]
-pub async fn restart_backend(app: AppHandle) -> Result<(), String> {
-    let backend = app.state::<Arc<BackendManager>>();
+pub async fn restart_backend(
+    backend: tauri::State<'_, Arc<BackendManager>>  // Fixed: use State properly
+) -> Result<(), String> {
     backend.stop()?;
-    std::thread::sleep(Duration::from_secs(1));
+    tokio::time::sleep(Duration::from_secs(1)).await;
     backend.start()?;
     backend.wait_ready(10).await
 }
