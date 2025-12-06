@@ -1,83 +1,61 @@
 ## Description
 
-Please include a summary of the changes and which issue is fixed. Include relevant motivation and context.
+<!-- Décrivez clairement les changements apportés -->
 
-Fixes # (issue)
+## Type de changement
 
-## Type of Change
-
-Please delete options that are not relevant.
-
-- [ ] Bug fix (non-breaking change which fixes an issue)
-- [ ] New feature (non-breaking change which adds functionality)
-- [ ] Breaking change (fix or feature that would cause existing functionality to not work as expected)
-- [ ] Documentation update
-- [ ] Performance improvement
-- [ ] Code refactoring
-- [ ] CI/CD changes
-
-## Affected Components
-
-- [ ] Backend (Rust)
-- [ ] Desktop App (Tauri)
-- [ ] Mobile App (Flutter)
-- [ ] Documentation
-- [ ] CI/CD
-- [ ] Tests
-
-## How Has This Been Tested?
-
-Please describe the tests that you ran to verify your changes.
-
-- [ ] Unit tests
-- [ ] Integration tests
-- [ ] Manual testing
-- [ ] Tested on Windows
-- [ ] Tested on macOS
-- [ ] Tested on Linux
-- [ ] Tested on Android
-- [ ] Tested on iOS
-
-## Test Configuration:
-
-- Rust version:
-- Flutter version:
-- OS:
-- Device (for mobile):
+- [ ] 🐛 Bug fix (changement non-breaking qui résout un problème)
+- [ ] ✨ Nouvelle fonctionnalité (changement non-breaking qui ajoute une feature)
+- [ ] 🔥 Breaking change (fix ou feature qui casse la compatibilité)
+- [ ] 📝 Documentation (changements docs uniquement)
+- [ ] 🎨 Style (formatting, typos, whitespace)
+- [ ] ♻️ Refactoring (pas de changement fonctionnel)
+- [ ] ⚡ Performance (amélioration des performances)
+- [ ] ✅ Tests (ajout ou correction de tests)
+- [ ] 🛠️ CI/CD (changements scripts/workflows)
 
 ## Checklist
 
-Please check all that apply:
+- [ ] Mon code suit le style du projet
+- [ ] J'ai effectué une self-review de mon code
+- [ ] J'ai commenté mon code dans les zones complexes
+- [ ] J'ai mis à jour la documentation si nécessaire
+- [ ] Mes changements ne génèrent aucun warning
+- [ ] J'ai ajouté des tests couvrant mes changements
+- [ ] Tous les tests passent localement
+- [ ] J'ai mis à jour le CHANGELOG.md
 
-- [ ] My code follows the style guidelines of this project
-- [ ] I have performed a self-review of my own code
-- [ ] I have commented my code, particularly in hard-to-understand areas
-- [ ] I have made corresponding changes to the documentation
-- [ ] My changes generate no new warnings
-- [ ] I have added tests that prove my fix is effective or that my feature works
-- [ ] New and existing unit tests pass locally with my changes
-- [ ] Any dependent changes have been merged and published
-- [ ] I have run `cargo fmt` and `cargo clippy` (for Rust code)
-- [ ] I have run `flutter format` and `flutter analyze` (for Flutter code)
-- [ ] No secrets or credentials are committed
-- [ ] I have updated the CHANGELOG.md (if applicable)
+## Tests
 
-## Screenshots (if applicable)
+<!-- Décrivez les tests effectués -->
 
-Add screenshots to help explain your changes.
+### Backend
+```bash
+cd backend
+cargo test
+```
 
-## Additional Notes
+### Desktop
+```bash
+cd desktop
+cargo tauri build
+```
 
-Any additional information that reviewers should know.
+### Mobile
+```bash
+cd mobile
+flutter test
+flutter build apk
+```
 
-## Breaking Changes
+## Screenshots (si applicable)
 
-If this PR introduces breaking changes, please describe them and the migration path for existing users.
+<!-- Ajoutez des captures d'écran si changements UI -->
 
-## Performance Impact
+## Issues liées
 
-Describe any performance implications of this change.
+<!-- Mentionnez les issues : Closes #123 -->
 
-## Security Considerations
+## Informations supplémentaires
 
-Describe any security implications or considerations for this change.
+<!-- Toute autre information pertinente -->
